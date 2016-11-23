@@ -12,9 +12,6 @@ namespace Prism.Commands
     /// <see cref="DelegateCommand{T}"/>
     public class DelegateCommand : DelegateCommandBase
     {
-        Action _executeMethod;
-        Func<bool> _canExecuteMethod;
-
         /// <summary>
         /// Creates a new instance of <see cref="DelegateCommand"/> with the <see cref="Action"/> to invoke on execution.
         /// </summary>
@@ -32,13 +29,10 @@ namespace Prism.Commands
         /// <param name="executeMethod">The <see cref="Action"/> to invoke when <see cref="ICommand.Execute"/> is called.</param>
         /// <param name="canExecuteMethod">The <see cref="Func{TResult}"/> to invoke when <see cref="ICommand.CanExecute"/> is called</param>
         public DelegateCommand(Action executeMethod, Func<bool> canExecuteMethod) 
-            : base()
+            : base((o) => executeMethod(), (o) => canExecuteMethod())
         {
             if (executeMethod == null || canExecuteMethod == null)
                 throw new ArgumentNullException(nameof(executeMethod), Resources.DelegateCommandDelegatesCannotBeNull);
-
-            _executeMethod = executeMethod;
-            _canExecuteMethod = canExecuteMethod;
         }
 
         ///<summary>
@@ -46,12 +40,7 @@ namespace Prism.Commands
         ///</summary>
         public void Execute()
         {
-            _executeMethod();
-        }
-
-        protected override void InvokeExecute(object parameter)
-        {
-            Execute();
+            base.Execute(null);
         }
 
         /// <summary>
@@ -60,12 +49,7 @@ namespace Prism.Commands
         /// <returns>Returns <see langword="true"/> if the command can execute,otherwise returns <see langword="false"/>.</returns>
         public bool CanExecute()
         {
-            return _canExecuteMethod();
-        }
-
-        protected override bool InvokeCanExecute(object parameter)
-        {
-            return CanExecute();
+            return base.CanExecute(null);
         }
 
         /// <summary>
@@ -83,13 +67,11 @@ namespace Prism.Commands
         /// <summary>
         /// Observes a property that is used to determine if this command can execute, and if it implements INotifyPropertyChanged it will automatically call DelegateCommandBase.RaiseCanExecuteChanged on property changed notifications.
         /// </summary>
-        /// <param name="canExecuteExpression">The property expression. Example: ObservesCanExecute(() => PropertyName).</param>
+        /// <param name="canExecuteExpression">The property expression. Example: ObservesCanExecute((o) => PropertyName).</param>
         /// <returns>The current instance of DelegateCommand</returns>
-        public DelegateCommand ObservesCanExecute(Expression<Func<bool>> canExecuteExpression)
+        public DelegateCommand ObservesCanExecute(Expression<Func<object, bool>> canExecuteExpression)
         {
-            _canExecuteMethod = canExecuteExpression.Compile();
-            AddPropertyToObserve(PropertySupport.ExtractPropertyNameFromLambda(canExecuteExpression));
-            HookInpc(canExecuteExpression.Body as MemberExpression);
+            ObservesCanExecuteInternal(canExecuteExpression);
             return this;
         }
     }

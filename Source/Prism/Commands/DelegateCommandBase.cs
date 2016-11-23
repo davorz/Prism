@@ -11,7 +11,7 @@ using System.Threading;
 namespace Prism.Commands
 {
     /// <summary>
-    /// An <see cref="ICommand"/> whose delegates can be attached for <see cref="InvokeExecute"/> and <see cref="InvokeCanExecute"/>.
+    /// An <see cref="ICommand"/> whose delegates can be attached for <see cref="Execute"/> and <see cref="CanExecute"/>.
     /// </summary>
     public abstract class DelegateCommandBase : ICommand, IActiveAware
     {
@@ -22,8 +22,21 @@ namespace Prism.Commands
         readonly HashSet<string> _propertiesToObserve = new HashSet<string>();
         private INotifyPropertyChanged _inpc;
 
-        protected DelegateCommandBase()
+        readonly Action<object> _executeMethod;
+        Func<object, bool> _canExecuteMethod;
+
+        /// <summary>
+        /// Creates a new instance of a <see cref="DelegateCommandBase"/>, specifying both the execute action and the can execute function.
+        /// </summary>
+        /// <param name="executeMethod">The <see cref="Action"/> to execute when <see cref="ICommand.Execute"/> is invoked.</param>
+        /// <param name="canExecuteMethod">The <see cref="Func{Object,Bool}"/> to invoked when <see cref="ICommand.CanExecute"/> is invoked.</param>
+        protected DelegateCommandBase(Action<object> executeMethod, Func<object, bool> canExecuteMethod)
         {
+            if (executeMethod == null || canExecuteMethod == null)
+                throw new ArgumentNullException(nameof(executeMethod), Resources.DelegateCommandDelegatesCannotBeNull);
+
+            _executeMethod = executeMethod;
+            _canExecuteMethod = canExecuteMethod;
             _synchronizationContext = SynchronizationContext.Current;
         }
 
@@ -61,28 +74,44 @@ namespace Prism.Commands
 
         void ICommand.Execute(object parameter)
         {
-            InvokeExecute(parameter);
+            Execute(parameter);
         }
 
         bool ICommand.CanExecute(object parameter)
         {
-            return InvokeCanExecute(parameter);
+            return CanExecute(parameter);
         }
 
-        protected abstract void InvokeExecute(object parameter);
+        protected void Execute(object parameter)
+        {
+            _executeMethod(parameter);
+        }
 
-        protected abstract bool InvokeCanExecute(object parameter);
+        protected bool CanExecute(object parameter)
+        {
+            return _canExecuteMethod(parameter);
+        }
 
         /// <summary>
         /// Observes a property that implements INotifyPropertyChanged, and automatically calls DelegateCommandBase.RaiseCanExecuteChanged on property changed notifications.
         /// </summary>
         /// <typeparam name="T">The object type containing the property specified in the expression.</typeparam>
         /// <param name="propertyExpression">The property expression. Example: ObservesProperty(() => PropertyName).</param>
-        /// <returns>The current instance of DelegateCommand</returns>
         protected internal void ObservesPropertyInternal<T>(Expression<Func<T>> propertyExpression)
         {
             AddPropertyToObserve(PropertySupport.ExtractPropertyName(propertyExpression));
             HookInpc(propertyExpression.Body as MemberExpression);
+        }
+
+        /// <summary>
+        /// Observes a property that is used to determine if this command can execute, and if it implements INotifyPropertyChanged it will automatically call DelegateCommandBase.RaiseCanExecuteChanged on property changed notifications.
+        /// </summary>
+        /// <param name="canExecuteExpression">The property expression. Example: ObservesCanExecute((o) => PropertyName).</param>
+        protected internal void ObservesCanExecuteInternal(Expression<Func<object, bool>> canExecuteExpression)
+        {
+            _canExecuteMethod = canExecuteExpression.Compile();
+            AddPropertyToObserve(PropertySupport.ExtractPropertyNameFromLambda(canExecuteExpression));
+            HookInpc(canExecuteExpression.Body as MemberExpression);
         }
 
         protected void HookInpc(MemberExpression expression)
