@@ -65,14 +65,14 @@ namespace Prism.Commands
 
         protected override void Execute(object parameter)
         {
-            Debug.Assert(!(parameter == null && typeof(T).GetTypeInfo().IsValueType), "You have defined a ValueType for your paramater, but are tyring to pass null.  Fix your code!");
+            Debug.Assert(!(parameter == null && typeof(T).GetTypeInfo().IsValueType), "You have defined a ValueType for your paramater, but are trying to pass null.  Fix your code!");
 
             Execute((T)parameter);
         }
 
         protected override bool CanExecute(object parameter)
         {
-            Debug.Assert(!(parameter == null && typeof(T).GetTypeInfo().IsValueType), "You have defined a ValueType for your paramater, but are tyring to pass null.  Fix your code!");
+            Debug.Assert(!(parameter == null && typeof(T).GetTypeInfo().IsValueType), "You have defined a ValueType for your paramater, but are trying to pass null.  Fix your code!");
 
             return CanExecute((T)parameter);
         }
