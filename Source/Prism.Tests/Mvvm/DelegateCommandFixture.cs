@@ -343,7 +343,7 @@ namespace Prism.Tests.Mvvm
         {
             bool canExecuteChangedRaised = false;
 
-            ICommand command = new DelegateCommand(() => { }).ObservesCanExecute((o) => BoolProperty);
+            ICommand command = new DelegateCommand(() => { }).ObservesCanExecute(() => BoolProperty);
 
             command.CanExecuteChanged += delegate { canExecuteChangedRaised = true; };
 
@@ -361,7 +361,7 @@ namespace Prism.Tests.Mvvm
         {
             bool canExecuteChangedRaised = false;
 
-            ICommand command = new DelegateCommand(() => { }).ObservesCanExecute((o) => BoolProperty).ObservesProperty(() => IntProperty);
+            ICommand command = new DelegateCommand(() => { }).ObservesCanExecute(() => BoolProperty).ObservesProperty(() => IntProperty);
 
             command.CanExecuteChanged += delegate { canExecuteChangedRaised = true; };
 
@@ -387,7 +387,7 @@ namespace Prism.Tests.Mvvm
         {
             Assert.Throws<ArgumentException>(() =>
             {
-                ICommand command = new DelegateCommand(() => { }).ObservesCanExecute((o) => BoolProperty).ObservesCanExecute((o) => BoolProperty);
+                ICommand command = new DelegateCommand(() => { }).ObservesCanExecute(() => BoolProperty).ObservesCanExecute(() => BoolProperty);
             });
         }
 

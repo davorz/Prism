@@ -69,9 +69,10 @@ namespace Prism.Commands
         /// </summary>
         /// <param name="canExecuteExpression">The property expression. Example: ObservesCanExecute((o) => PropertyName).</param>
         /// <returns>The current instance of DelegateCommand</returns>
-        public DelegateCommand ObservesCanExecute(Expression<Func<object, bool>> canExecuteExpression)
+        public DelegateCommand ObservesCanExecute(Expression<Func<bool>> canExecuteExpression)
         {
-            ObservesCanExecuteInternal(canExecuteExpression);
+            Expression<Func<object, bool>> exp = Expression.Lambda<Func<object, bool>>(canExecuteExpression.Body, Expression.Parameter(typeof(object), "o"));
+            ObservesCanExecuteInternal(exp);
             return this;
         }
     }
