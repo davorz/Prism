@@ -114,6 +114,18 @@ namespace Prism.Commands
             HookInpc(canExecuteExpression.Body as MemberExpression);
         }
 
+        /// <summary>
+        /// Observes a property that is used to determine if this command can execute, and if it implements INotifyPropertyChanged it will automatically call DelegateCommandBase.RaiseCanExecuteChanged on property changed notifications.
+        /// </summary>
+        /// <param name="canExecuteExpression">The property expression. Example: ObservesCanExecute((o) => PropertyName).</param>
+        protected internal void ObservesCanExecuteInternal(Expression<Func<bool>> canExecuteExpression)
+        {
+            Expression<Func<object, bool>> expression = Expression.Lambda<Func<object, bool>>(canExecuteExpression.Body, Expression.Parameter(typeof(object), "o"));
+            _canExecuteMethod = expression.Compile();
+            AddPropertyToObserve(PropertySupport.ExtractPropertyNameFromLambda(canExecuteExpression));
+            HookInpc(canExecuteExpression.Body as MemberExpression);
+        }
+
         protected void HookInpc(MemberExpression expression)
         {
             if (expression == null)

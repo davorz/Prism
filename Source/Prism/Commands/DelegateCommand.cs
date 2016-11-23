@@ -71,8 +71,7 @@ namespace Prism.Commands
         /// <returns>The current instance of DelegateCommand</returns>
         public DelegateCommand ObservesCanExecute(Expression<Func<bool>> canExecuteExpression)
         {
-            Expression<Func<object, bool>> exp = Expression.Lambda<Func<object, bool>>(canExecuteExpression.Body, Expression.Parameter(typeof(object), "o"));
-            ObservesCanExecuteInternal(exp);
+            ObservesCanExecuteInternal(canExecuteExpression);
             return this;
         }
     }
