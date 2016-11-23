@@ -41,10 +41,7 @@ namespace Prism.Commands
         ///<param name="parameter">Data used by the command.</param>
         public void Execute(T parameter)
         {
-            if (parameter == null && typeof(T).GetTypeInfo().IsValueType)
-                base.Execute(default(T));
-            else
-                base.Execute(parameter);
+            base.Execute(parameter);
         }
 
         ///<summary>
@@ -56,9 +53,6 @@ namespace Prism.Commands
         ///</returns>
         public bool CanExecute(T parameter)
         {
-            if (parameter == null && typeof(T).GetTypeInfo().IsValueType)
-                return base.CanExecute(default(T));
-
             return base.CanExecute(parameter);
         }
 
@@ -80,7 +74,7 @@ namespace Prism.Commands
         /// <param name="canExecuteExpression">The property expression. Example: ObservesCanExecute((o) => PropertyName).</param>
         /// <returns>The current instance of DelegateCommand</returns>
         public DelegateCommand<T> ObservesCanExecute(Expression<Func<bool>> canExecuteExpression)
-        {            
+        {
             ObservesCanExecuteInternal(canExecuteExpression);
             return this;
         }
