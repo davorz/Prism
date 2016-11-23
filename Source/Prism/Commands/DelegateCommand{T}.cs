@@ -41,7 +41,10 @@ namespace Prism.Commands
         ///<param name="parameter">Data used by the command.</param>
         public void Execute(T parameter)
         {
-            base.Execute(parameter);
+            if (parameter == null && typeof(T).GetTypeInfo().IsValueType)
+                base.Execute(default(T));
+            else
+                base.Execute(parameter);
         }
 
         ///<summary>
@@ -53,6 +56,9 @@ namespace Prism.Commands
         ///</returns>
         public bool CanExecute(T parameter)
         {
+            if (parameter == null && typeof(T).GetTypeInfo().IsValueType)
+                return base.CanExecute(default(T));
+
             return base.CanExecute(parameter);
         }
 
