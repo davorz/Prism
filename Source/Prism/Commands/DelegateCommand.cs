@@ -1,6 +1,7 @@
 using System;
 using System.Linq.Expressions;
 using Prism.Properties;
+using Prism.Mvvm;
 
 namespace Prism.Commands
 {
@@ -9,8 +10,11 @@ namespace Prism.Commands
     /// </summary>
     /// <see cref="DelegateCommandBase"/>
     /// <see cref="DelegateCommand{T}"/>
-    public sealed class DelegateCommand : DelegateCommandBase
+    public class DelegateCommand : DelegateCommandBase
     {
+        Action _executeMethod;
+        Func<bool> _canExecuteMethod;
+
         /// <summary>
         /// Creates a new instance of <see cref="DelegateCommand"/> with the <see cref="Action"/> to invoke on execution.
         /// </summary>
@@ -18,6 +22,7 @@ namespace Prism.Commands
         public DelegateCommand(Action executeMethod)
             : this(executeMethod, () => true)
         {
+
         }
 
         /// <summary>
@@ -26,11 +31,14 @@ namespace Prism.Commands
         /// </summary>
         /// <param name="executeMethod">The <see cref="Action"/> to invoke when <see cref="ICommand.Execute"/> is called.</param>
         /// <param name="canExecuteMethod">The <see cref="Func{TResult}"/> to invoke when <see cref="ICommand.CanExecute"/> is called</param>
-        public DelegateCommand(Action executeMethod, Func<bool> canExecuteMethod)
-            : base((o) => executeMethod(), (o) => canExecuteMethod())
+        public DelegateCommand(Action executeMethod, Func<bool> canExecuteMethod) 
+            : base()
         {
             if (executeMethod == null || canExecuteMethod == null)
                 throw new ArgumentNullException(nameof(executeMethod), Resources.DelegateCommandDelegatesCannotBeNull);
+
+            _executeMethod = executeMethod;
+            _canExecuteMethod = canExecuteMethod;
         }
 
         ///<summary>
@@ -38,7 +46,12 @@ namespace Prism.Commands
         ///</summary>
         public void Execute()
         {
-            base.Execute(null);
+            _executeMethod();
+        }
+
+        protected override void InvokeExecute(object parameter)
+        {
+            Execute();
         }
 
         /// <summary>
@@ -47,7 +60,12 @@ namespace Prism.Commands
         /// <returns>Returns <see langword="true"/> if the command can execute,otherwise returns <see langword="false"/>.</returns>
         public bool CanExecute()
         {
-            return base.CanExecute(null);
+            return _canExecuteMethod();
+        }
+
+        protected override bool InvokeCanExecute(object parameter)
+        {
+            return CanExecute();
         }
 
         /// <summary>
@@ -65,11 +83,13 @@ namespace Prism.Commands
         /// <summary>
         /// Observes a property that is used to determine if this command can execute, and if it implements INotifyPropertyChanged it will automatically call DelegateCommandBase.RaiseCanExecuteChanged on property changed notifications.
         /// </summary>
-        /// <param name="canExecuteExpression">The property expression. Example: ObservesCanExecute((o) => PropertyName).</param>
+        /// <param name="canExecuteExpression">The property expression. Example: ObservesCanExecute(() => PropertyName).</param>
         /// <returns>The current instance of DelegateCommand</returns>
-        public DelegateCommand ObservesCanExecute(Expression<Func<object, bool>> canExecuteExpression)
+        public DelegateCommand ObservesCanExecute(Expression<Func<bool>> canExecuteExpression)
         {
-            ObservesCanExecuteInternal(canExecuteExpression);
+            _canExecuteMethod = canExecuteExpression.Compile();
+            AddPropertyToObserve(PropertySupport.ExtractPropertyNameFromLambda(canExecuteExpression));
+            HookInpc(canExecuteExpression.Body as MemberExpression);
             return this;
         }
     }

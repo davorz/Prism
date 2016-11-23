@@ -2,7 +2,6 @@ using System;
 using System.Windows.Input;
 using Xunit;
 using Prism.Commands;
-using Prism.Tests.Mocks.Commands;
 using Prism.Mvvm;
 
 namespace Prism.Tests.Mvvm
@@ -37,12 +36,11 @@ namespace Prism.Tests.Mvvm
         }
 
         [Fact]
-        public void WhenConstructedWithGenericTypeIsNonNullableValueType_Throws()
+        public void WhenConstructedWithGenericTypeIsNonNullableValueType_InitializesValues()
         {
-            Assert.Throws<InvalidCastException>(() =>
-            {
-                var actual = new DelegateCommand<int>(param => { });
-            });
+
+            var actual = new DelegateCommand<int>(param => { });
+            Assert.NotNull(actual);
         }
 
         [Fact]
@@ -112,6 +110,37 @@ namespace Prism.Tests.Mvvm
         }
 
         [Fact]
+        public void ShouldPassParameterValueTypeOnExecute()
+        {
+            bool executeCalled = false;
+            int x = 32;
+            ICommand command = new DelegateCommand<int>(delegate (int parameter)
+            {
+                Assert.Equal(x, parameter);
+                executeCalled = true;
+            });
+
+            command.Execute(x);
+            Assert.True(executeCalled);
+        }
+
+        [Fact]
+        public void ShouldPassParameterValueTypeOnCanExecute()
+        {
+            bool canExecuteCalled = false;
+            int x = 32;
+            ICommand command = new DelegateCommand<int>((p) => { }, delegate (int parameter)
+            {
+                Assert.Equal(x, parameter);
+                canExecuteCalled = true;
+                return true;
+            });
+
+            command.CanExecute(x);
+            Assert.True(canExecuteCalled);
+        }
+
+        [Fact]
         public void ShouldPassParameterInstanceOnExecute()
         {
             bool executeCalled = false;
@@ -174,7 +203,7 @@ namespace Prism.Tests.Mvvm
         {
             Assert.Throws<ArgumentNullException>(() =>
             {
-                var command = new DelegateCommandMock(null, null);
+                var command = new DelegateCommand(null, null);
             });
         }
 
@@ -183,7 +212,7 @@ namespace Prism.Tests.Mvvm
         {
             Assert.Throws<ArgumentNullException>(() =>
             {
-                var command = new DelegateCommandMock(null);
+                var command = new DelegateCommand(null);
             });
         }
 
@@ -192,7 +221,7 @@ namespace Prism.Tests.Mvvm
         {
             Assert.Throws<ArgumentNullException>(() =>
             {
-                var command = new DelegateCommandMock((o) => { }, null);
+                var command = new DelegateCommand<object>((o) => { }, null);
             });
         }
 
@@ -314,7 +343,7 @@ namespace Prism.Tests.Mvvm
         {
             bool canExecuteChangedRaised = false;
 
-            ICommand command = new DelegateCommand(() => { }).ObservesCanExecute((o) => BoolProperty);
+            ICommand command = new DelegateCommand(() => { }).ObservesCanExecute(() => BoolProperty);
 
             command.CanExecuteChanged += delegate { canExecuteChangedRaised = true; };
 
@@ -332,7 +361,7 @@ namespace Prism.Tests.Mvvm
         {
             bool canExecuteChangedRaised = false;
 
-            ICommand command = new DelegateCommand(() => { }).ObservesCanExecute((o) => BoolProperty).ObservesProperty(() => IntProperty);
+            ICommand command = new DelegateCommand(() => { }).ObservesCanExecute(() => BoolProperty).ObservesProperty(() => IntProperty);
 
             command.CanExecuteChanged += delegate { canExecuteChangedRaised = true; };
 
@@ -358,7 +387,7 @@ namespace Prism.Tests.Mvvm
         {
             Assert.Throws<ArgumentException>(() =>
             {
-                ICommand command = new DelegateCommand(() => { }).ObservesCanExecute((o) => BoolProperty).ObservesCanExecute((o) => BoolProperty);
+                ICommand command = new DelegateCommand(() => { }).ObservesCanExecute(() => BoolProperty).ObservesCanExecute(() => BoolProperty);
             });
         }
 
