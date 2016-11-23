@@ -88,7 +88,7 @@ namespace Prism.Commands
         public DelegateCommand ObservesCanExecute(Expression<Func<bool>> canExecuteExpression)
         {
             _canExecuteMethod = canExecuteExpression.Compile();
-            ObservesCanExecuteInternal(canExecuteExpression);
+            ObservesPropertyInternal(canExecuteExpression);
             return this;
         }
     }

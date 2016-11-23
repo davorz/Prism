@@ -64,12 +64,12 @@ namespace Prism.Commands
 
         protected override void Execute(object parameter)
         {
-            this.Execute((T)parameter);
+            Execute((T)parameter);
         }
 
         protected override bool CanExecute(object parameter)
         {
-            return this.CanExecute((T)parameter);
+            return CanExecute((T)parameter);
         }
 
         /// <summary>
@@ -93,7 +93,7 @@ namespace Prism.Commands
         {
             Expression<Func<T, bool>> expression = Expression.Lambda<Func<T, bool>>(canExecuteExpression.Body, Expression.Parameter(typeof(object), "o"));
             _canExecuteMethod = expression.Compile();
-            ObservesCanExecuteInternal(canExecuteExpression);
+            ObservesPropertyInternal(canExecuteExpression);
             return this;
         }
     }
