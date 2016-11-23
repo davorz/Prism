@@ -12,6 +12,9 @@ namespace Prism.Commands
     /// <see cref="DelegateCommand{T}"/>
     public class DelegateCommand : DelegateCommandBase
     {
+        Action _executeMethod;
+        Func<bool> _canExecuteMethod;
+
         /// <summary>
         /// Creates a new instance of <see cref="DelegateCommand"/> with the <see cref="Action"/> to invoke on execution.
         /// </summary>
@@ -28,11 +31,14 @@ namespace Prism.Commands
         /// </summary>
         /// <param name="executeMethod">The <see cref="Action"/> to invoke when <see cref="ICommand.Execute"/> is called.</param>
         /// <param name="canExecuteMethod">The <see cref="Func{TResult}"/> to invoke when <see cref="ICommand.CanExecute"/> is called</param>
-        public DelegateCommand(Action executeMethod, Func<bool> canExecuteMethod) 
-            : base((o) => executeMethod(), (o) => canExecuteMethod())
+        public DelegateCommand(Action executeMethod, Func<bool> canExecuteMethod)
+            : base()
         {
             if (executeMethod == null || canExecuteMethod == null)
                 throw new ArgumentNullException(nameof(executeMethod), Resources.DelegateCommandDelegatesCannotBeNull);
+
+            _executeMethod = executeMethod;
+            _canExecuteMethod = canExecuteMethod;
         }
 
         ///<summary>
@@ -40,7 +46,7 @@ namespace Prism.Commands
         ///</summary>
         public void Execute()
         {
-            base.Execute(null);
+            _executeMethod();
         }
 
         /// <summary>
@@ -49,7 +55,17 @@ namespace Prism.Commands
         /// <returns>Returns <see langword="true"/> if the command can execute,otherwise returns <see langword="false"/>.</returns>
         public bool CanExecute()
         {
-            return base.CanExecute(null);
+            return _canExecuteMethod();
+        }
+
+        protected override void Execute(object parameter)
+        {
+            this.Execute();
+        }
+
+        protected override bool CanExecute(object parameter)
+        {
+            return this.CanExecute();
         }
 
         /// <summary>
