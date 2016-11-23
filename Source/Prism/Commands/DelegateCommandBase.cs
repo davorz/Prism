@@ -5,7 +5,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Windows.Input;
 using Prism.Mvvm;
-using Prism.Properties;
 using System.Threading;
 
 namespace Prism.Commands

@@ -36,14 +36,6 @@ namespace Prism.Tests.Mvvm
         }
 
         [Fact]
-        public void WhenConstructedWithGenericTypeIsNonNullableValueType_InitializesValues()
-        {
-
-            var actual = new DelegateCommand<int>(param => { });
-            Assert.NotNull(actual);
-        }
-
-        [Fact]
         public void ExecuteCallsPassedInExecuteDelegate()
         {
             var handlers = new DelegateHandlers();
@@ -107,37 +99,6 @@ namespace Prism.Tests.Mvvm
             command.RaiseCanExecuteChanged();
 
             Assert.False(canExecuteChangedRaised);
-        }
-
-        [Fact]
-        public void ShouldPassParameterValueTypeOnExecute()
-        {
-            bool executeCalled = false;
-            int x = 32;
-            ICommand command = new DelegateCommand<int>(delegate (int parameter)
-            {
-                Assert.Equal(x, parameter);
-                executeCalled = true;
-            });
-
-            command.Execute(32);
-            Assert.True(executeCalled);
-        }
-
-        [Fact]
-        public void ShouldPassParameterValueTypeOnCanExecute()
-        {
-            bool canExecuteCalled = false;
-            int x = 32;
-            ICommand command = new DelegateCommand<int>((p) => { }, delegate (int parameter)
-            {
-                Assert.Equal(x, parameter);
-                canExecuteCalled = true;
-                return true;
-            });
-
-            command.CanExecute(x);
-            Assert.True(canExecuteCalled);
         }
 
         [Fact]

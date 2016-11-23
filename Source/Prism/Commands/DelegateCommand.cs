@@ -1,7 +1,6 @@
 using System;
 using System.Linq.Expressions;
 using Prism.Properties;
-using Prism.Mvvm;
 
 namespace Prism.Commands
 {

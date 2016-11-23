@@ -1,7 +1,5 @@
-﻿using Prism.Mvvm;
-using Prism.Properties;
+﻿using Prism.Properties;
 using System;
-using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -11,6 +9,26 @@ namespace Prism.Commands
     /// An <see cref="ICommand"/> whose delegates can be attached for <see cref="Execute"/> and <see cref="CanExecute"/>.
     /// </summary>
     /// <typeparam name="T">Parameter type.</typeparam>
+    /// <remarks>
+    /// The constructor deliberately prevents the use of value types.
+    /// Because ICommand takes an object, having a value type for T would cause unexpected behavior when CanExecute(null) is called during XAML initialization for command bindings.
+    /// Using default(T) was considered and rejected as a solution because the implementor would not be able to distinguish between a valid and defaulted values.
+    /// <para/>
+    /// Instead, callers should support a value type by using a nullable value type and checking the HasValue property before using the Value property.
+    /// <example>
+    ///     <code>
+    /// public MyClass()
+    /// {
+    ///     this.submitCommand = new DelegateCommand&lt;int?&gt;(this.Submit, this.CanSubmit);
+    /// }
+    /// 
+    /// private bool CanSubmit(int? customerId)
+    /// {
+    ///     return (customerId.HasValue &amp;&amp; customers.Contains(customerId.Value));
+    /// }
+    ///     </code>
+    /// </example>
+    /// </remarks>
     public class DelegateCommand<T> : DelegateCommandBase
     {
         readonly Action<T> _executeMethod;
@@ -37,6 +55,18 @@ namespace Prism.Commands
         {
             if (executeMethod == null || canExecuteMethod == null)
                 throw new ArgumentNullException(nameof(executeMethod), Resources.DelegateCommandDelegatesCannotBeNull);
+
+            TypeInfo genericTypeInfo = typeof(T).GetTypeInfo();
+
+            // DelegateCommand allows object or Nullable<>.  
+            // note: Nullable<> is a struct so we cannot use a class constraint.
+            if (genericTypeInfo.IsValueType)
+            {
+                if ((!genericTypeInfo.IsGenericType) || (!typeof(Nullable<>).GetTypeInfo().IsAssignableFrom(genericTypeInfo.GetGenericTypeDefinition().GetTypeInfo())))
+                {
+                    throw new InvalidCastException(Resources.DelegateCommandInvalidGenericPayloadType);
+                }
+            }
 
             _executeMethod = executeMethod;
             _canExecuteMethod = canExecuteMethod;
@@ -65,15 +95,11 @@ namespace Prism.Commands
 
         protected override void Execute(object parameter)
         {
-            Debug.Assert(!(parameter == null && typeof(T).GetTypeInfo().IsValueType), "You have defined a ValueType for your paramater, but are trying to pass null.  Fix your code!");
-
             Execute((T)parameter);
         }
 
         protected override bool CanExecute(object parameter)
         {
-            Debug.Assert(!(parameter == null && typeof(T).GetTypeInfo().IsValueType), "You have defined a ValueType for your paramater, but are trying to pass null.  Fix your code!");
-
             return CanExecute((T)parameter);
         }
 
