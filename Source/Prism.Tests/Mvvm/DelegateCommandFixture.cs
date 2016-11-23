@@ -120,7 +120,7 @@ namespace Prism.Tests.Mvvm
                 executeCalled = true;
             });
 
-            command.Execute(x);
+            command.Execute(32);
             Assert.True(executeCalled);
         }
 
