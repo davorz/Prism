@@ -83,10 +83,11 @@ namespace Prism.Commands
         /// <summary>
         /// Observes a property that is used to determine if this command can execute, and if it implements INotifyPropertyChanged it will automatically call DelegateCommandBase.RaiseCanExecuteChanged on property changed notifications.
         /// </summary>
-        /// <param name="canExecuteExpression">The property expression. Example: ObservesCanExecute((o) => PropertyName).</param>
+        /// <param name="canExecuteExpression">The property expression. Example: ObservesCanExecute(() => PropertyName).</param>
         /// <returns>The current instance of DelegateCommand</returns>
         public DelegateCommand ObservesCanExecute(Expression<Func<bool>> canExecuteExpression)
         {
+            _canExecuteMethod = canExecuteExpression.Compile();
             ObservesCanExecuteInternal(canExecuteExpression);
             return this;
         }
